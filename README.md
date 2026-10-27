@@ -40,10 +40,10 @@ cd patch-proxmox-nosub
 chmod +x patch-proxmox-nosub.sh
 ```
 
-Optionally, install it globally:
+Optionally, install it globally (the command is then `patch-proxmox-nosub.sh`, extension included):
 
 ```bash
-cp patch-proxmox-nosub.sh /usr/local/bin/patch-proxmox-nosub
+install -m 755 patch-proxmox-nosub.sh /usr/local/bin/patch-proxmox-nosub.sh
 ```
 
 ---
@@ -57,9 +57,10 @@ cp patch-proxmox-nosub.sh /usr/local/bin/patch-proxmox-nosub
 ```
 
 The script will:
-1. Create a backup of `proxmoxlib.js` at `proxmoxlib.js.bak` (first run only)
-2. Neutralize the subscription check
-3. Restart `pveproxy` so changes take effect immediately
+1. Check that the subscription check is still present (if not, it exits without changing anything)
+2. Save a backup of the current, unpatched `proxmoxlib.js` at `proxmoxlib.js.bak` (refreshed on every patch, so it always matches the installed package version)
+3. Neutralize the subscription check
+4. Restart `pveproxy` so changes take effect immediately
 
 Refresh your browser — the nag dialog will be gone.
 
@@ -69,7 +70,7 @@ Refresh your browser — the nag dialog will be gone.
 ./patch-proxmox-nosub.sh restore
 ```
 
-Copies the backup back into place and restarts `pveproxy`.
+Copies the backup back into place and restarts `pveproxy`. The backup is the file as it was just before the last patch, so after a package update, patch again before relying on `restore`.
 
 ---
 
@@ -80,7 +81,7 @@ Copies the backup back into place and restarts `pveproxy`.
   ==============================
 
 [INFO]  Target: /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
-[WARN]  Backup already exists at ...proxmoxlib.js.bak — skipping backup step.
+[OK]    Backup of current unpatched file saved at ...proxmoxlib.js.bak
 [OK]    Subscription check neutralized.
 [INFO]  Restarting pveproxy...
 [OK]    pveproxy restarted. Changes are live — refresh your browser.
@@ -93,8 +94,10 @@ Copies the backup back into place and restarts `pveproxy`.
 Updates to `proxmox-widget-toolkit` will overwrite `proxmoxlib.js` and revert the patch. When this happens, simply rerun:
 
 ```bash
-patch-proxmox-nosub patch
+patch-proxmox-nosub.sh patch
 ```
+
+(or `./patch-proxmox-nosub.sh patch` from the cloned directory). Running the script with no argument only prints the usage text and changes nothing.
 
 You can check if the patch is still active by running the script — it will warn you if the pattern is not found or already neutralized.
 

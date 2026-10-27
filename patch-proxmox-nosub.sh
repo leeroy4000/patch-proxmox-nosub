@@ -54,19 +54,16 @@ fi
 do_patch() {
     info "Target: $TARGET"
 
-    # Backup
-    if [ ! -f "$BACKUP" ]; then
-        cp "$TARGET" "$BACKUP"
-        success "Backup created at $BACKUP"
-    else
-        warn "Backup already exists at $BACKUP — skipping backup step."
-    fi
-
-    # Check if already patched
+    # Check if already patched (must come first so we never back up a patched file)
     if ! grep -q "$PATCH_PATTERN" "$TARGET"; then
         warn "Patch pattern not found. File may already be patched or your Proxmox version uses a different pattern."
         exit 0
     fi
+
+    # Backup: the pattern is present, so this is an unpatched file. Always refresh the
+    # backup, because a package update replaces proxmoxlib.js and an old .bak would be stale.
+    cp "$TARGET" "$BACKUP"
+    success "Backup of current unpatched file saved at $BACKUP"
 
     # Apply patch
     sed -i "s/$PATCH_PATTERN/false/" "$TARGET"
